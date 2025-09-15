@@ -40,7 +40,7 @@ If you wish to run this project on your local machine, you'll need to install th
 
 The project follows a standard machine learning workflow, from data preparation to model deployment.
 
-1.  **Data Loading and Exploration**: The dataset (`train.csv`) is loaded into a pandas DataFrame. The features (`comment_text`) and the multi-label targets are separated.
+1.  **Data Loading and Exploration**: The [dataset](https://www.kaggle.com/datasets/julian3833/jigsaw-toxic-comment-classification-challenge) (`train.csv`) is loaded into a pandas DataFrame. The features (`comment_text`) and the multi-label targets are separated.
 
 2.  **Text Preprocessing**: The core of the preprocessing is the `TextVectorization` layer from TensorFlow. This layer handles:
 
