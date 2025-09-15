@@ -1,80 +1,90 @@
-# Toxic Comments Classifier
+# Toxic Comment Classification using Deep Learning
 
-## Overview
+## Overview 📖
 
-This project is a deep learning-based multi-label classification model designed to detect toxic comments from online discussions. Using TensorFlow and an LSTM architecture, the model classifies comments into six categories: toxic, severe_toxic, obscene, threat, insult, and identity_hate. The dataset is sourced from the Kaggle Toxic Comment Classification Challenge (train.csv, not included in this repo—download it separately). The project includes data preprocessing, model training, evaluation using ROC-AUC scores, and an interactive Gradio interface for testing predictions. This serves as an introduction to NLP tasks in deep learning, handling imbalanced data, and deploying models for real-time inference.
+This project focuses on building a deep learning model to detect and classify different types of toxicity in online comments. The model is designed to handle multi-label classification, identifying whether a comment falls into one or more of six categories: **toxic**, **severe toxic**, **obscene**, **threat**, **insult**, and **identity hate**.
 
-## Project Steps
+The core of this project is a neural network built with TensorFlow/Keras, featuring an `Embedding` layer and a `Bidirectional LSTM` to effectively process the sequential nature of text data. The final model is deployed in a simple interactive web interface using Gradio.
 
-Here’s a step-by-step guide to setting up and running the project. This project was developed in Google Colab to leverage free GPU resources, which are crucial for deep learning tasks as training on CPU can take hours or even days for large datasets.
+-----
 
-1. **Set Up Environment**
+## 💻 Environment and Setup
 
-   - Use Google Colab for development: Open Google Colab and upload the `DL_Project_Toxic_Comments.ipynb` notebook.
-   - Enable GPU acceleration: Go to Runtime &gt; Change runtime type &gt; Select GPU (e.g., T4 GPU). This significantly speeds up model training.
-   - If running locally (e.g., on Jupyter Notebook or VS Code), ensure you have a compatible GPU and CUDA installed for TensorFlow to use hardware acceleration.
+This project was developed using Google Colab to leverage its free access to high-performance resources, especially GPUs.
 
-2. **Download and Load Data**
+### Why Google Colab?
 
-   - Download the dataset from Kaggle Toxic Comment Classification Challenge.
-   - Place `train.csv` in your working directory or upload it to Colab.
-   - Load the data using pandas: `df = pd.read_csv('train.csv')`.
+Training deep learning models on large datasets is computationally intensive. A **GPU (Graphics Processing Unit)** can drastically reduce training time from hours to minutes. Google Colab provides a convenient, pre-configured environment with free GPU access, making it ideal for projects like this.
 
-3. **Install Dependencies (For Local Run)**\
-   Google Colab comes with many pre-installed packages, but if running locally, install the required libraries via pip:
+### Local Setup Instructions
 
-   ```bash
-   pip install tensorflow pandas numpy matplotlib scikit-learn gradio
-   ```
+If you wish to run this project on your local machine, you'll need to install the necessary Python packages.
 
-   Note: TensorFlow includes Keras, so no separate installation is needed.
+1.  **Clone the repository:**
 
-4. **Data Preprocessing**
+    ```bash
+    git clone <your-repository-url>
+    cd <your-repository-directory>
+    ```
 
-   - Explore the dataset: Check for class imbalances and preview comments.
-   - Tokenize text: Use `Tokenizer` from TensorFlow to convert comments into sequences (limited to 20,000 words).
-   - Pad sequences: Ensure uniform input length (max 200 words) using `pad_sequences`.
-   - Split data: Use `train_test_split` from scikit-learn for 90/10 train-validation split.
+2.  **Install the required packages:**
+    Google Colab comes with many libraries pre-installed. For a local setup, you'll need to install the following:
 
-5. **Model Building and Training**
+    ```bash
+    pip install tensorflow pandas matplotlib gradio
+    ```
 
-   - Build an LSTM model: Embedding layer (128 dimensions), Bidirectional LSTM (64 units), Dense layers with sigmoid activation for multi-label output.
-   - Compile: Use binary cross-entropy loss and Adam optimizer.
-   - Train: Fit the model for 2 epochs with batch size 32, monitoring validation loss.
+-----
 
-6. **Evaluation**
+## 🛠️ Project Steps
 
-   - Predict on validation set and compute ROC-AUC scores for each label using `roc_auc_score` from scikit-learn.
-   - Visualize results: Plot ROC curves with matplotlib.
+The project follows a standard machine learning workflow, from data preparation to model deployment.
 
-7. **Interactive Testing**
+1.  **Data Loading and Exploration**: The dataset (`train.csv`) is loaded into a pandas DataFrame. The features (`comment_text`) and the multi-label targets are separated.
 
-   - Define a scoring function to predict toxicity labels for new comments.
-   - Launch a Gradio interface: Input a comment and get boolean predictions for each toxicity category.
-   - Run `interface.launch(share=True)` to generate a public link for sharing.
+2.  **Text Preprocessing**: The core of the preprocessing is the `TextVectorization` layer from TensorFlow. This layer handles:
 
-8. **Run the Notebook**
+      * **Vocabulary Creation**: It builds a vocabulary of the top 200,000 most frequent words from the comments.
+      * **Integer Encoding**: It converts each comment into a sequence of integer IDs.
+      * **Padding/Truncation**: It ensures every sequence has a uniform length of 1800 by padding shorter comments and truncating longer ones.
 
-   - Execute cells sequentially in Colab or locally.
-   - For local runs without GPU, reduce batch size or epochs to manage training time.
+3.  **Building a Data Pipeline**: An efficient `tf.data.Dataset` pipeline is created to handle the data during training. This pipeline includes:
 
-## Python Packages Used
+      * `.cache()`: To keep the data in memory for faster access across epochs.
+      * `.shuffle()`: To randomize the data order and prevent the model from learning patterns based on data sequence.
+      * `.batch()`: To group data into batches of 16 for efficient training.
+      * `.prefetch()`: To prepare subsequent batches while the current one is being processed, optimizing GPU utilization.
 
-The following Python packages are used in this project:
+4.  **Dataset Splitting**: The dataset is split into three parts:
 
-- **tensorflow**: For building, training, and deploying the LSTM model (includes Keras for neural networks).
-- **pandas**: For data loading and manipulation.
-- **numpy**: For numerical operations and array handling.
-- **matplotlib**: For plotting ROC curves and visualizations.
-- **scikit-learn**: For data splitting and evaluation metrics.
-- **gradio**: For creating an interactive web interface to test the model.
+      * **70%** for **Training**
+      * **20%** for **Validation** (to monitor performance and prevent overfitting during training)
+      * **10%** for **Testing** (to evaluate the final model's performance on unseen data)
 
-For a complete list, refer to the notebook imports. If running locally, install via the command in the Project Steps.
+5.  **Model Architecture**: A `Sequential` model is constructed with the following layers:
 
-## Additional Information
+      * **Embedding Layer**: Converts the integer-encoded vocabulary into dense vectors of size 32.
+      * **Bidirectional LSTM Layer**: Processes the text sequence both forwards and backward, capturing contextual information effectively.
+      * **Dense Layers**: Three fully-connected layers with ReLU activation for feature extraction.
+      * **Output Layer**: A final Dense layer with 6 neurons (one for each toxicity class) and a `sigmoid` activation function to output a probability between 0 and 1 for each class.
 
-- **Dataset**: The project uses `train.csv` from Kaggle's Toxic Comment Classification Challenge, containing \~160,000 comments labeled for toxicity. Download it and place it in the project directory. Note: The dataset may contain offensive language—handle with care.
+6.  **Model Training**: The model is compiled using the **`BinaryCrossentropy`** loss function (suitable for multi-label problems) and the **`Adam`** optimizer. It's then trained for 5 epochs, with performance monitored on the validation set.
 
-- **Why Google Colab?**: Deep learning models like LSTM benefit from GPU acceleration. Colab provides free access to GPUs, reducing training time from hours to minutes. For local setups, ensure TensorFlow-GPU is installed and configured.
+7.  **Performance Evaluation**: The trained model is evaluated on the test set using `Precision`, `Recall`, and `CategoricalAccuracy` metrics to assess its real-world performance. The final evaluation metrics were:
 
-- **Challenges and Learnings**: This project highlights handling multi-label classification, sequence padding in NLP, and evaluating imbalanced datasets. It's a great starter for NLP in deep learning.
+      * **Precision**: $0.86$
+      * **Recall**: $0.79$
+      * **Accuracy**: $0.49$
+
+8.  **Interactive Testing with Gradio**: A user-friendly web interface is created using the `Gradio` library. This allows anyone to input a comment and receive an instant toxicity score across the six categories.
+
+-----
+
+## 🚀 How to Use
+
+To test the model with your own comments:
+
+1.  Ensure you have completed the setup instructions.
+2.  Run the `DL_Project_Toxic_Comments.ipynb` notebook in a Jupyter environment or Google Colab.
+3.  The final cells of the notebook will save the trained model as `toxicity.h5` and launch the Gradio web interface.
+4.  Enter any comment into the input box in the Gradio interface and click "Submit" to see the classification results.
